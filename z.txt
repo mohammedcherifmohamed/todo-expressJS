@@ -1,0 +1,20 @@
+
+
+
+npm init -y
+
+npm install 
+
+npm install express pg cors
+
+npm install nodemon -D
+
+
+we make app.use(express.json())
+        to be able to access req.body
+
+
+npm create vite@latest .
+
+npm install
+npm install axios react-icons// for http request 
