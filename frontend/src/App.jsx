@@ -11,6 +11,19 @@ function App(){
   const [editTodo , setEditTodo] = useState(null);
   const [editText , setEditText] = useState('');
 
+ 
+
+  const fetchTodos = async ()=>{
+    try{
+      const result = await axios.get('http://localhost:3000/todos');
+      // console.log(result.data);
+      setTodos(result.data);
+    }catch(e){
+      consoloe.log(e.message);
+    }
+  }
+
+   fetchTodos();
 
   const addTask = async (e) =>{
 
@@ -19,21 +32,33 @@ function App(){
     console.log(title);
     setTitle("");
 
-    setTodos([...todos,title]);
+    // setTodos([...todos,title]);
 
 
-    // try {
-    //   const res = await axios.post('http:localhost:3000/todos', {
-    //     title,
-    //     completed : false,
-    //   });       
-    // } catch (error) {
-    //   console.log(error.message);
-    // }
+    try {
+      const res = await axios.post('http://localhost:3000/todos', {
+        title,
+        completed : false,
+      });       
+
+      setTodos([...todos,res.data.title]);
+
+    } catch (error) {
+      console.log(error.message);
+    }
 
 
   }
 
+const MarkComplete = async (id)=>{
+  try{
+    const res = await axios.put(`http://localhost:3000/todos/${id}`);
+    console.log(res.data);
+  }catch(e){
+    console.log(e.message);
+  }
+
+}
   return(
 
     <>
@@ -43,7 +68,7 @@ function App(){
          <h1 className="text-3xl font-bold" >PERN TO DO APP</h1>  
 
           <div className="">
-            <form onSubmit={addTask} action="">
+            <form onSubmit={addTask} action="" method="post">
 
               <input
                  className="border border-gray p-1.5 m-1.5 rounded-lg "
@@ -65,10 +90,11 @@ function App(){
               <div>
                 {todos.map((todo,index)=>(
                   <div className="flex justify-between items-center gap-4" key={index}> 
-                    <h2 className="text-xl font-bold" >{todo}</h2>
+                    <h2 className={`text-xl font-bold ${todo.completed ? 'line-through' : ''}`} >{todo.title}</h2>
                     <div className="flex gap-1">
-                      <p className="p-2 m-2 rounded-2xl cursor-pointer bg-blue-600 text-gray-400" >edit</p>
-                      <p className="p-2 m-2 rounded-2xl cursor-pointer bg-red-600 text-gray-400" >delete</p>
+                      <button onclick={MarkComplete(todo.id)} className="p-2 m-2 rounded-2xl cursor-pointer bg-blue-600 text-white-400" >edit</button>
+                      <button onclick={MarkComplete(todo.id)} className="p-2 m-2 rounded-2xl cursor-pointer bg-red-600 text-white-400" >delete</button>
+                      <button onclick={MarkComplete(todo.id)} className="p-2 m-2 rounded-2xl cursor-pointer bg-green-600 text-white-400" >Completed</button>
                     </div>
                   </div>
 
