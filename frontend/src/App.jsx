@@ -1,114 +1,172 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
 
-import { useState } from "react";
+function App() {
+  const [title, setTitle] = useState("");
+  const [todos, setTodos] = useState([]);
+  const [editTodo, setEditTodo] = useState(null);
+  const [taskButton, setTaskButton] = useState("Add Task");
 
-import axios from 'axios';
-
-function App(){
-
-
-  const [title ,setTitle] = useState("");
-  const [todos , setTodos] = useState([]);
-  const [editTodo , setEditTodo] = useState(null);
-  const [editText , setEditText] = useState('');
-
- 
-
-  const fetchTodos = async ()=>{
-    try{
-      const result = await axios.get('http://localhost:3000/todos');
-      // console.log(result.data);
+  // 🔄 Fetch todos once
+  const fetchTodos = async () => {
+    try {
+      const result = await axios.get("http://localhost:3000/todos");
       setTodos(result.data);
-    }catch(e){
-      consoloe.log(e.message);
+    } catch (e) {
+      console.log(e.message);
     }
-  }
+  };
 
-   fetchTodos();
+  useEffect(() => {
+    fetchTodos();
+  }, []);
 
-  const addTask = async (e) =>{
-
+  // ➕ Add or ✏️ Update task
+  const addTask = async (e) => {
     e.preventDefault();
 
-    console.log(title);
-    setTitle("");
-
-    // setTodos([...todos,title]);
-
+    if (!title.trim()) return;
 
     try {
-      const res = await axios.post('http://localhost:3000/todos', {
-        title,
-        completed : false,
-      });       
+      let res;
 
-      setTodos([...todos,res.data.title]);
+      // ✏️ UPDATE MODE
+      if (editTodo) {
+        res = await axios.put(
+          `http://localhost:3000/todos/${editTodo.id}`,
+          { title }
+        );
+
+        setTodos(
+          todos.map((todo) =>
+            todo.id === editTodo.id ? res.data : todo
+          )
+        );
+
+        setEditTodo(null);
+        setTaskButton("Add Task");
+
+      } else {
+        // ➕ ADD MODE
+        res = await axios.post("http://localhost:3000/todos", {
+          title,
+          completed: false,
+        });
+
+        setTodos([...todos, res.data]);
+      }
+
+      setTitle("");
 
     } catch (error) {
       console.log(error.message);
     }
+  };
 
+  // ✅ Toggle complete
+  const markComplete = async (id, status) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:3000/todos/${id}`,
+        { completed: !status }
+      );
 
-  }
+      setTodos(
+        todos.map((todo) =>
+          todo.id === id ? res.data : todo
+        )
+      );
 
-const MarkComplete = async (id)=>{
-  try{
-    const res = await axios.put(`http://localhost:3000/todos/${id}`);
-    console.log(res.data);
-  }catch(e){
-    console.log(e.message);
-  }
+    } catch (e) {
+      console.log(e.message);
+    }
+  };
 
-}
-  return(
+  // ✏️ Start editing
+  const editTask = (todo) => {
+    setEditTodo(todo);
+    setTitle(todo.title);
+    setTaskButton("Update Task");
+  };
 
-    <>
-    
-      <div className="min-h-screen flex items-center gap-4 flex-col justify-center content-center bg-gray-700  text-white ">
-        
-         <h1 className="text-3xl font-bold" >PERN TO DO APP</h1>  
+  // 🗑️ Delete
+  const deleteTodo = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/todos/${id}`);
 
-          <div className="">
-            <form onSubmit={addTask} action="" method="post">
+      setTodos(todos.filter((todo) => todo.id !== id));
 
-              <input
-                 className="border border-gray p-1.5 m-1.5 rounded-lg "
-                  type="text" 
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}  
-                  />
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center flex-col gap-4 justify-center bg-gray-700 text-white">
+
+      <h1 className="text-3xl font-bold">PERN TO DO APP</h1>
+
+      {/* FORM */}
+      <form onSubmit={addTask}>
+        <input
+          className="border border-gray p-2 m-2 rounded-lg text-black"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter task..."
+        />
+
+        <button
+          type="submit"
+          className="bg-green-700 px-4 py-2 rounded-xl cursor-pointer"
+        >
+          {taskButton}
+        </button>
+      </form>
+
+      {/* TODOS */}
+      <div className="flex flex-col gap-4 w-full max-w-md">
+        {todos.map((todo) => (
+          <div
+            key={todo.id}
+            className="flex justify-between items-center bg-gray-800 p-3 rounded-xl"
+          >
+            <h2
+              className={`text-lg font-semibold ${
+                todo.completed ? "line-through text-gray-400" : ""
+              }`}
+            >
+              {todo.title}
+            </h2>
+
+            <div className="flex gap-2">
               <button
-                className="text-white text-bold bg-green-800 p-2.5 rounded-3xl cursor-pointer" 
-                onClick={addTask}
-                >Add Task</button>
-            </form>
+                onClick={() => editTask(todo)}
+                className="bg-blue-600 px-2 py-1 rounded-lg"
+              >
+                Edit
+              </button>
 
-            </div>  
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                className="bg-red-600 px-2 py-1 rounded-lg"
+              >
+                Delete
+              </button>
 
-
-            <div className="flex flex-col gap-4">
-
-              <div>
-                {todos.map((todo,index)=>(
-                  <div className="flex justify-between items-center gap-4" key={index}> 
-                    <h2 className={`text-xl font-bold ${todo.completed ? 'line-through' : ''}`} >{todo.title}</h2>
-                    <div className="flex gap-1">
-                      <button onclick={MarkComplete(todo.id)} className="p-2 m-2 rounded-2xl cursor-pointer bg-blue-600 text-white-400" >edit</button>
-                      <button onclick={MarkComplete(todo.id)} className="p-2 m-2 rounded-2xl cursor-pointer bg-red-600 text-white-400" >delete</button>
-                      <button onclick={MarkComplete(todo.id)} className="p-2 m-2 rounded-2xl cursor-pointer bg-green-600 text-white-400" >Completed</button>
-                    </div>
-                  </div>
-
-                ))}
-
-              </div>
-
-              </div>
+              <button
+                onClick={() => markComplete(todo.id, todo.completed)}
+                className="bg-green-600 px-2 py-1 rounded-lg"
+              >
+                {todo.completed ? "Undo" : "Done"}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-    </>
 
+    </div>
   );
-
-
 }
 
-export default App ;
+export default App;
