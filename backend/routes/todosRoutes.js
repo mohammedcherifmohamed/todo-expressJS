@@ -3,7 +3,9 @@ const pool = require("../db");
 
 const router = Router();
 
-// ➕ CREATE TODO
+
+
+
 router.post("/", async (req, res) => {
   try {
     const { title, completed } = req.body;
@@ -21,7 +23,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 📥 GET ALL TODOS
+
 router.get("/", async (req, res) => {
   try {
     const todos = await pool.query("SELECT * FROM todo ORDER BY id ASC");
@@ -33,7 +35,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✏️ UPDATE TODO (title OR completed OR both)
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -63,7 +64,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// 🗑️ DELETE TODO
+
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
