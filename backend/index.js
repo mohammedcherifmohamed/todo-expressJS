@@ -1,24 +1,23 @@
+require('dotenv').config();
 
 
 const  express = require('express') ;
 const cors = require('cors') ;
+
+const {User} = require('./models/User');
+
 const  todosRoutes = require('./routes/todosRoutes') ;
 
 const app = express() ;
 app.set('view engine', 'ejs');
+
+const  connectDB = require('./db' );
+
+connectDB() ;
 const mongoose = require('mongoose');
 
 const Article = require("./models/Article");
 
-
-mongoose.connect('mongodb://mohamed:mohamed123@ac-vpdlzzn-shard-00-00.jmriatw.mongodb.net:27017,ac-vpdlzzn-shard-00-01.jmriatw.mongodb.net:27017,ac-vpdlzzn-shard-00-02.jmriatw.mongodb.net:27017/?ssl=true&replicaSet=atlas-1448pw-shard-0&authSource=admin&appName=Cluster0')
-.then(()=>{
-
-    console.log("Connected to MongoDB");
-
-}).catch((err)=>{
-    console.log(err.message);
-})
 
 app.use(cors());
 app.use(express.json()) ;
@@ -58,6 +57,39 @@ app.get('/articles',async(req,res)=>{
     }catch(err){
         console.log(err.message) ;
     }
+})
+
+
+
+app.post('/register',async (req,res)=>{
+
+    try{
+        const {name,email,password} = req.body;
+        const user = new User({
+            name,email,password
+        })
+        await user.save();
+        console.log(user);
+        res.json({message:"User registered successfully"}) ;
+    }catch(err){
+        console.log(err.message) ;
+    }
+
+
+})
+
+app.post('/login',async (req,res)=>{
+
+    try{
+        const {name,email,password} = req.body;
+        const user = await User.findOne({email});
+        console.log(user);
+        res.json({message:"User logged in successfully"}) ;
+    }catch(err){
+        console.log(err.message) ;
+    }
+
+
 })
 
 app.listen(3000,()=>{

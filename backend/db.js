@@ -1,32 +1,18 @@
 
 
-// const mongos = require('mongoose');
+const mongoose = require('mongoose');
 
-// mongose.connect('mongodb+srv://mohamed:mohamed123@cluster0.jmriatw.mongodb.net/?appName=Cluster0')
-// .then(()=>{
+const connectDB = async ()=>{
+    try{
 
-//     console.log("Connected to MongoDB");
+        const conn = await mongoose.connect(process.env.MONGODB_URI)
+        console.log(`MongoDB Connected: ${conn.connection.host}`) ;
+    
+    }catch(err){
+        console.log(err.message);
+    }
+    
+    
+}
 
-// }).catch((err)=>{
-//     console.log(err.message);
-// })
-
-
-// module.exports = mongos;
-
-
-
-
-// const {Pool }= require('pg') ;
-
-// const pool = new Pool({
-
-//     user:'postgres',
-//     password:'postgress',
-//     host:"localhost",
-//     port:5432,
-//     database:"todos"
-
-// });
-
-// module.exports = pool;
+    module.exports = connectDB ;
