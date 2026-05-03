@@ -1,5 +1,8 @@
 require('dotenv').config();
 
+const jwt = require('jsonwebtoken');
+
+const {auth} = require('./middlewares/Auth') ;
 
 const  express = require('express') ;
 const cors = require('cors') ;
@@ -21,6 +24,65 @@ const Article = require("./models/Article");
 
 app.use(cors());
 app.use(express.json()) ;
+
+
+
+app.post('/register',async (req,res)=>{
+
+    try{
+        const {name,email,password} = req.body;
+        const user = new User({
+            name,email,password
+        })
+        await user.save();
+        console.log(user);
+        res.json({message:"User registered successfully"}) ;
+    }catch(err){
+        console.log(err.message) ;
+    }
+
+
+})
+
+app.post('/login',async (req,res)=>{
+
+const {name,email,password} = req.body ;
+
+    try{
+        if(!email || !password){
+            return res.status(400).json({message:"Please provide email and password"}) ;
+        }
+        const user = await User.findOne({email});
+        if(!user){
+            return res.status(400).json({message:"Invalid email or password"}) ;
+        }
+        const isMatch = await user.comparePassword(password);
+        if(!isMatch){
+            return res.status(400).json({message:"Invalid email or password"}) ;
+        }
+        console.log(user);
+        const token = generateToken(user._id) ;
+        res.status(200).json({
+            id:user._id,
+            name:user.name,
+            email:user.email,    
+            token
+        })
+    }catch(err){
+        console.log(err.message) ;
+    }
+
+})
+
+app.get('/me',auth,async(req,res)=>{
+
+    res.status(200).json({message:'You are Authenticated ,This is the protected route'}) ;
+    
+})
+
+const generateToken = (id)=>{
+    return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:'1d'})
+}
 
 
 app.use("/todos",todosRoutes)
@@ -60,37 +122,6 @@ app.get('/articles',async(req,res)=>{
 })
 
 
-
-app.post('/register',async (req,res)=>{
-
-    try{
-        const {name,email,password} = req.body;
-        const user = new User({
-            name,email,password
-        })
-        await user.save();
-        console.log(user);
-        res.json({message:"User registered successfully"}) ;
-    }catch(err){
-        console.log(err.message) ;
-    }
-
-
-})
-
-app.post('/login',async (req,res)=>{
-
-    try{
-        const {name,email,password} = req.body;
-        const user = await User.findOne({email});
-        console.log(user);
-        res.json({message:"User logged in successfully"}) ;
-    }catch(err){
-        console.log(err.message) ;
-    }
-
-
-})
 
 app.listen(3000,()=>{
     console.log("Server is running on port 3000")
